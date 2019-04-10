@@ -3,7 +3,7 @@
  */
 package com.yisebell.learningspringboot.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -56,12 +56,41 @@ public class UserServiceTest {
 			.add(anna)
 			.build();
 		given(fakeDataDao.getAllUsers()).willReturn(users);
-		List<User> allUsers = userService.getAllUsers();
+		List<User> allUsers = userService.getAllUsers(Optional.empty());
 		assertThat(allUsers).hasSize(1);
 		
 		User user = allUsers.get(0);
 		
 		assertUserFields(user);
+	}
+	
+	@Test
+	public void testGetAllUserByGender() {
+		UUID annaUserUid = UUID.randomUUID();
+		User anna = new User(annaUserUid,"anna","montana",
+				Gender.FEMALE,30,"anna@mail.com");
+		
+		UUID joeUserUid = UUID.randomUUID();
+		User joe = new User(joeUserUid,"joe","jones",
+				Gender.MALE,30,"joe.jones@mail.com");
+		
+		ImmutableList<User> users = new ImmutableList.Builder<User>()
+			.add(anna)
+			.add(joe)
+			.build();
+		
+		given(fakeDataDao.getAllUsers()).willReturn(users);
+		
+		List<User> filteredUsers = userService.getAllUsers(Optional.of("MALE"));
+		
+		assertThat(filteredUsers).hasSize(1);
+	}
+	
+	@Test
+	public void testThrowExceptionWhenGenderisInvalid() {
+		assertThatThrownBy(() -> userService.getAllUsers(Optional.of("ghsjhafdsgh")))
+		.isInstanceOf(IllegalStateException.class)
+		.hasMessageContaining("Invalid gender");
 	}
 
 	/**
@@ -105,6 +134,15 @@ public class UserServiceTest {
 		assertUserFields(user);
 		assertThat(updateResult).isEqualTo(1);
 	}
+	
+	@Test
+	public void testFailUpdateUser() {
+		UUID annaUid = UUID.randomUUID();
+		User anna = new User(annaUid,"anna","montana",
+				Gender.FEMALE,30,"anna@mail.com");
+		int updateResult = userService.updateUser(anna);
+		assertThat(updateResult).isEqualTo(-1);
+	}
 
 	/**
 	 * Test method for {@link com.yisebell.learningspringboot.service.UserService#removeUser(java.util.UUID)}.
@@ -123,6 +161,13 @@ public class UserServiceTest {
 		verify(fakeDataDao).removeUser(annaUid);
 		
 		assertThat(deleteResult).isEqualTo(1);
+	}
+	
+	@Test
+	public void testFailRemoveUser() {
+		UUID userUid = UUID.randomUUID();
+		int removeResult = userService.removeUser(userUid);
+		assertThat(removeResult).isEqualTo(-1);
 	}
 
 	/**
@@ -143,7 +188,7 @@ public class UserServiceTest {
 		User user = captor.getValue();
 		
 		assertUserFields(user);
-		assertThat(insertResult).isEqualTo(1);
+		assertThat(insertResult).isEqualTo(0);
 	}
 	
 	private void assertUserFields(User user) {

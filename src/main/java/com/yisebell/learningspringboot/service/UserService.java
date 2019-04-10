@@ -3,12 +3,14 @@ package com.yisebell.learningspringboot.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.yisebell.learningspringboot.dao.UserDao;
 import com.yisebell.learningspringboot.model.User;
+import com.yisebell.learningspringboot.model.User.Gender;
 
 @Service
 public class UserService {
@@ -20,8 +22,20 @@ public class UserService {
 		this.userDao = userDao;
 	}
 
-	public List<User> getAllUsers() {
-		return userDao.getAllUsers();
+	public List<User> getAllUsers(Optional<String> gender) {
+		List<User> users = userDao.getAllUsers();
+		if(!gender.isPresent()) {
+			return userDao.getAllUsers();
+		}
+		try {
+			Gender theGender = Gender.valueOf(gender.get().toUpperCase());
+			return users.stream()
+					.filter(user -> user.getGender().equals(theGender))
+					.collect(Collectors.toList());
+		} catch (Exception e) {
+			throw new IllegalStateException("Invalid gender",e);
+		}
+		
 	}
 
 	public Optional<User> getUser(UUID userUid) {
@@ -45,8 +59,7 @@ public class UserService {
 	}
 
 	public int insertUser(User user) {
-		UUID uuid = UUID.randomUUID();
-		user.setUserUid(uuid);
-		return userDao.insertUser(uuid, user);
+		UUID userUid = UUID.randomUUID();
+		return userDao.insertUser(userUid, User.newUser(userUid, user));
 	}
 }
