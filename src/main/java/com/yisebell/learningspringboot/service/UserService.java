@@ -1,6 +1,7 @@
 package com.yisebell.learningspringboot.service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -59,7 +60,16 @@ public class UserService {
 	}
 
 	public int insertUser(User user) {
-		UUID userUid = UUID.randomUUID();
+		UUID userUid = user.getUserUid() == null ? UUID.randomUUID() : user.getUserUid();
 		return userDao.insertUser(userUid, User.newUser(userUid, user));
+	}
+
+	private void validateUser(User user) {
+		Objects.requireNonNull(user.getFirstName(), "first name required");
+		Objects.requireNonNull(user.getLastName(), "last name required");
+		Objects.requireNonNull(user.getAge(), "age required");
+		Objects.requireNonNull(user.getEmail(), "email required");
+		// validate email		
+		Objects.requireNonNull(user.getGender(), "gender required");
 	}
 }

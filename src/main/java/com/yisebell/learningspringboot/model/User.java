@@ -3,15 +3,30 @@ package com.yisebell.learningspringboot.model;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class User {
 	
 	private final UUID userUid;
+	@NotNull(message = "first name required")
 	private final String firstName;
+	@NotNull
 	private final String lastName;
+	@NotNull
 	private final Gender gender;
+	@NotNull
+	@Max(value = 112)
+	@Min(value = 0)
 	private final Integer age;
+	@NotNull
+	@Email
 	private final String email;
 	
 	public User(@JsonProperty("userUid") UUID userUid,
